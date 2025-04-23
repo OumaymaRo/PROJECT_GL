@@ -36,7 +36,8 @@ public class AuthController {
     @GetMapping("/login")
     public String login() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.isAuthenticated() && !authentication.getPrincipal().equals("anonymousUser")) {
+        if (authentication != null && authentication.isAuthenticated()
+                && !authentication.getPrincipal().equals("anonymousUser")) {
             for (GrantedAuthority authority : authentication.getAuthorities()) {
                 String role = authority.getAuthority();
                 if (role.equals("ROLE_FOURNISSEUR")) {
@@ -58,7 +59,8 @@ public class AuthController {
     @GetMapping("/register")
     public String register() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.isAuthenticated() && !authentication.getPrincipal().equals("anonymousUser")) {
+        if (authentication != null && authentication.isAuthenticated()
+                && !authentication.getPrincipal().equals("anonymousUser")) {
             for (GrantedAuthority authority : authentication.getAuthorities()) {
                 String role = authority.getAuthority();
                 if (role.equals("ROLE_FOURNISSEUR")) {
@@ -79,28 +81,28 @@ public class AuthController {
 
     @PostMapping("/register")
     public String registerUser(@RequestParam String username,
-                             @RequestParam String password,
-                             @RequestParam String email,
-                             @RequestParam String role) {
+            @RequestParam String password,
+            @RequestParam String email,
+            @RequestParam String role) {
         try {
             logger.info("Tentative d'inscription pour l'utilisateur: " + username);
             logger.info("Rôle sélectionné: " + role);
-            
+
             User newUser = new User();
             newUser.setUsername(username);
             newUser.setPassword(passwordEncoder.encode(password));
             newUser.setEmail(email);
-            
+
             String roleName = "ROLE_" + role.toUpperCase();
             logger.info("Recherche du rôle: " + roleName);
-            
+
             Role userRole = roleRepository.findByNom(roleName)
                     .orElseThrow(() -> new RuntimeException("Role not found: " + roleName));
-            
+
             Set<Role> roles = new HashSet<>();
             roles.add(userRole);
             newUser.setRoles(roles);
-            
+
             userRepository.save(newUser);
             logger.info("Utilisateur enregistré avec succès: " + username);
             return "redirect:/login";
@@ -109,4 +111,4 @@ public class AuthController {
             return "redirect:/register?error=true";
         }
     }
-} 
+}
