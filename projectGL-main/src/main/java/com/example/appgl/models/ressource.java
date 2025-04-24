@@ -121,5 +121,21 @@ public class ressource {
 	public void setPannes(List<panne> pannes) {
 		this.pannes = pannes;
 	}
+	@Transient
+public String getType() {
+    if (this instanceof ordinateur) {
+        return "ordinateur";
+    } else if (this instanceof imprimante) {
+        return "imprimante";
+    }
+    return "inconnu";
+}
+
+	@Override
+	public String toString() {
+		return "ressource [id=" + id + ", nom=" + nom + ", etataffectation=" + etataffectation + ", etatpanne="
+				+ etatpanne + ", marque=" + marque + ", mresponsable=" + mresponsable + ", enseignant=" + enseignant
+				+ "]";
+	}
 	
 }
