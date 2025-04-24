@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Ajouter une Ressource</title>
+</head>
+<body>
+    <h2>Ajouter une Ressource</h2>
+
+    <form th:action="@{/responsable/livraisons/ajouterRessource}" method="post" th:object="${ressource}">
+        
+        <!-- Choix du type de ressource -->
+        <label for="type">Type de Ressource :</label>
+        <select id="type" name="type" required>
+            <option value="ordinateur">Ordinateur</option>
+            <option value="imprimante">Imprimante</option>
+        </select>
+        <br><br>
+
+        <!-- Champs communs -->
+        <label for="nom">Nom :</label>
+        <input type="text" id="nom" name="nom" th:field="*{nom}" required>
+        <br><br>
+
+        <label for="marque">Marque :</label>
+        <input type="text" id="marque" name="marque" th:field="*{marque}" required>
+        <br><br>
+
+        <!-- Champs spécifiques pour l'ordinateur -->
+        <div id="ordinateur-fields" style="display:none;">
+            <label for="cpu">CPU :</label>
+            <input type="text" id="cpu" name="cpu" th:field="*{cpu}">
+            <br><br>
+
+            <label for="ram">RAM :</label>
+            <input type="text" id="ram" name="ram" th:field="*{ram}">
+            <br><br>
+
+            <label for="disquedur">Disque Dur :</label>
+            <input type="text" id="disquedur" name="disquedur" th:field="*{disquedur}">
+            <br><br>
+
+            <label for="ecran">Ecran :</label>
+            <input type="text" id="ecran" name="ecran" th:field="*{ecran}">
+            <br><br>
+        </div>
+
+        <!-- Champs spécifiques pour l'imprimante -->
+        <div id="imprimante-fields" style="display:none;">
+            <label for="resolution">Résolution :</label>
+            <input type="text" id="resolution" name="resolution" th:field="*{resolution}">
+            <br><br>
+
+            <label for="vitesseimpression">Vitesse d'Impression :</label>
+            <input type="text" id="vitesseimpression" name="vitesseimpression" th:field="*{vitesseimpression}">
+            <br><br>
+        </div>
+
+        <button type="submit">Ajouter Ressource</button>
+    </form>
+
+    <script>
+        // Afficher ou cacher les champs en fonction du type de ressource
+        document.getElementById("type").addEventListener("change", function() {
+            var type = this.value;
+            if (type == "ordinateur") {
+                document.getElementById("ordinateur-fields").style.display = "block";
+                document.getElementById("imprimante-fields").style.display = "none";
+            } else if (type == "imprimante") {
+                document.getElementById("ordinateur-fields").style.display = "none";
+                document.getElementById("imprimante-fields").style.display = "block";
+            }
+        });
+    </script>
+</body>
+</html>
