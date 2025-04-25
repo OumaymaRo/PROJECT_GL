@@ -3,9 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <title>Liste des Ressources</title>
+    
+    <!-- CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    
     <style>
+        .action-buttons {
+    display: flex;
+    gap: 5px; /* espace entre les boutons */
+    align-items: center; /* centrer les éléments verticalement */
+}
+
+.action-buttons button {
+    display: inline-flex; /* s'assure que chaque bouton reste un élément en ligne */
+    align-items: center; /* centrer les icônes à l'intérieur des boutons */
+}
+
+        /* Styles optimisés */
         .table-container {
             background: white;
             border-radius: 10px;
@@ -13,56 +29,44 @@
             padding: 20px;
             margin-top: 20px;
         }
+        
         .table thead th {
             background-color: #f8f9fa;
             border-bottom: 2px solid #dee2e6;
         }
+        
         .status-badge {
             padding: 5px 10px;
             border-radius: 15px;
             font-size: 0.8em;
         }
-        .status-available {
-            background-color: #28a745;
-            color: white;
-        }
-        .status-unavailable {
-            background-color: #dc3545;
-            color: white;
-        }
-        .status-panne {
-            background-color: #ffc107;
-            color: black;
-        }
-        .action-buttons .btn {
-            margin-right: 5px;
-        }
-        .btn-details {
-            background-color: #17a2b8;
-            color: white;
-        }
-        .btn-edit {
-            background-color: #ffc107;
-            color: black;
-        }
-        .btn-delete {
-            background-color: #dc3545;
-            color: white;
-        }
+        
+        .status-available { background-color: #28a745; color: white; }
+        .status-unavailable { background-color: #dc3545; color: white; }
+        .status-panne { background-color: #ffc107; color: black; }
+        
+        .action-buttons .btn { margin-right: 5px; }
+        .btn-details { background-color: #17a2b8; color: white; }
+        .btn-edit { background-color: #ffc107; color: black; }
+        .btn-delete { background-color: #dc3545; color: white; }
+        
         .details-list {
             list-style: none;
             padding: 0;
         }
+        
         .details-list li {
             margin-bottom: 10px;
             padding: 10px;
             background-color: #f8f9fa;
             border-radius: 5px;
         }
+        
         .details-list li strong {
             display: inline-block;
             width: 150px;
         }
+        
         .form-section {
             display: none;
             margin-top: 20px;
@@ -70,13 +74,13 @@
             background-color: #f8f9fa;
             border-radius: 5px;
         }
-        .form-section.active {
-            display: block;
-        }
+        
+        .form-section.active { display: block; }
     </style>
 </head>
 <body>
     <div class="container mt-4">
+        <!-- Header -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1>Liste des Ressources</h1>
             <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addRessourceModal">
@@ -84,46 +88,44 @@
             </button>
         </div>
 
+        <!-- Tableau principal -->
         <div class="table-container">
-            <table class="table table-hover">
+            <table id="ressourcesTable" class="table table-hover">
                 <thead>
                     <tr>
+                        <th>ID</th>
                         <th>Nom</th>
                         <th>Marque</th>
                         <th>Type</th>
                         <th>Statut</th>
-                        <th>Détails</th>
+                        <th>État panne</th>
+                        <th>Département</th>
+                        <th>Enseignant</th>
+                        
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr th:each="ressource : ${ressources}">
+                        <td th:text="${ressource.id}">ID</td> 
                         <td th:text="${ressource.nom}">Nom</td>
                         <td th:text="${ressource.marque}">Marque</td>
                         <td th:text="${ressource.type}">Type</td>
                         <td>
-                            <span class="badge status-badge" 
-                                  th:classappend="${ressource.etataffectation} ? 'status-unavailable' : 'status-available'">
-                                <span th:text="${ressource.etataffectation} ? 'Affecté' : 'Disponible'">Statut</span>
-                            </span>
-                            <span class="badge status-badge status-panne" th:if="${ressource.etatpanne}">
-                                En panne
+                            <span class="badge status-badge"
+                                  th:classappend="${ressource.etataffectation ? 'status-unavailable' : 'status-available'}">
+                                <span th:text="${ressource.etataffectation ? 'Affecté' : 'Disponible'}">Statut</span>
                             </span>
                         </td>
                         <td>
-                            <div th:if="${ressource instanceof T(com.example.appgl.models.ordinateur)}">
-                                <small>
-                                    CPU: <span th:text="${ressource.cpu}"></span><br>
-                                    RAM: <span th:text="${ressource.ram}"></span>
-                                </small>
-                            </div>
-                            <div th:if="${ressource instanceof T(com.example.appgl.models.imprimante)}">
-                                <small>
-                                    Résolution: <span th:text="${ressource.resolution}"></span><br>
-                                    Vitesse: <span th:text="${ressource.vitesseimpression}"></span>
-                                </small>
-                            </div>
+                            <span class="badge status-badge"
+                                  th:classappend="${ressource.etatpanne ? 'status-panne' : 'status-available'}">
+                                <span th:text="${ressource.etatpanne ? 'En panne' : 'Fonctionnel'}">État</span>
+                            </span>
                         </td>
+                        <td th:text="${ressource.departement?.nom}">Département</td>
+                        <td th:text="${ressource.enseignant != null ? ressource.enseignant.username : 'Aucun enseignant'}"></td>
+                       
                         <td class="action-buttons">
                             <button class="btn btn-sm btn-details" th:data-id="${ressource.id}" onclick="showDetails(this)">
                                 <i class="fas fa-info-circle"></i>
@@ -131,26 +133,28 @@
                             <button class="btn btn-sm btn-edit">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button class="btn btn-sm btn-delete">
+                            <button class="btn btn-sm btn-delete" th:data-id="${ressource.id}" onclick="deleteRessource(this)">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </td>
+                        
                     </tr>
                 </tbody>
             </table>
         </div>
     </div>
 
-    <!-- Modal pour afficher les détails -->
-    <div class="modal fade" id="detailsModal" tabindex="-1" aria-labelledby="detailsModalLabel" aria-hidden="true">
+    <!-- Modals -->
+    <!-- Modal Détails -->
+    <div class="modal fade" id="detailsModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="detailsModalLabel">Détails de la ressource</h5>
+                    <h5 class="modal-title">Détails de la ressource</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body" id="detailsContent">
-                    <!-- Le contenu sera rempli dynamiquement -->
+                    <!-- Contenu dynamique -->
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
@@ -159,26 +163,29 @@
         </div>
     </div>
 
-    <!-- Modal pour ajouter une ressource -->
-    <div class="modal fade" id="addRessourceModal" tabindex="-1" aria-labelledby="addRessourceModalLabel" aria-hidden="true">
+    <!-- Modal Ajout -->
+    <div class="modal fade" id="addRessourceModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="addRessourceModalLabel">Ajouter une ressource</h5>
+                    <h5 class="modal-title">Ajouter une ressource</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <form id="addRessourceForm">
+                        <!-- Champs communs -->
+                        <div class="mb-3">
+                            <label for="id" class="form-label">ID</label>
+                            <input type="number" class="form-control" id="id" name="id" required>
+                        </div>
                         <div class="mb-3">
                             <label for="type" class="form-label">Type de ressource</label>
-                            <select class="form-select" id="type" name="type" onchange="toggleFormSections()">
+                            <select class="form-select" id="type" name="type" required onchange="toggleFormSections()">
                                 <option value="">Sélectionnez un type</option>
                                 <option value="ordinateur">Ordinateur</option>
                                 <option value="imprimante">Imprimante</option>
                             </select>
                         </div>
-
-                        <!-- Champs communs -->
                         <div class="mb-3">
                             <label for="nom" class="form-label">Nom</label>
                             <input type="text" class="form-control" id="nom" name="nom" required>
@@ -188,37 +195,62 @@
                             <input type="text" class="form-control" id="marque" name="marque" required>
                         </div>
 
+                        <!-- Section Département/Enseignant -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="departement" class="form-label">Département</label>
+                                <select class="form-select" id="departement" name="departement" onchange="loadEnseignants(this.value)">
+                                    <option value="">Sélectionnez un département</option>
+                                    <option th:each="dep : ${departements}" 
+                                            th:value="${dep.id}" 
+                                            th:text="${dep.nom}"></option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="enseignant" class="form-label">Enseignant</label>
+                                <select class="form-select" id="enseignant" name="enseignant">
+                                    <option value="">Sélectionnez un enseignant</option>
+                                </select>
+                            </div>
+                        </div>
+
                         <!-- Section Ordinateur -->
                         <div id="ordinateurSection" class="form-section">
                             <h6>Spécifications de l'ordinateur</h6>
-                            <div class="mb-3">
-                                <label for="cpu" class="form-label">CPU</label>
-                                <input type="text" class="form-control" id="cpu" name="cpu">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="cpu" class="form-label">CPU</label>
+                                    <input type="text" class="form-control" id="cpu" name="cpu">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="ram" class="form-label">RAM</label>
+                                    <input type="text" class="form-control" id="ram" name="ram">
+                                </div>
                             </div>
-                            <div class="mb-3">
-                                <label for="ram" class="form-label">RAM</label>
-                                <input type="text" class="form-control" id="ram" name="ram">
-                            </div>
-                            <div class="mb-3">
-                                <label for="disquedur" class="form-label">Disque dur</label>
-                                <input type="text" class="form-control" id="disquedur" name="disquedur">
-                            </div>
-                            <div class="mb-3">
-                                <label for="ecran" class="form-label">Écran</label>
-                                <input type="text" class="form-control" id="ecran" name="ecran">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="disquedur" class="form-label">Disque dur</label>
+                                    <input type="text" class="form-control" id="disquedur" name="disquedur">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="ecran" class="form-label">Écran</label>
+                                    <input type="text" class="form-control" id="ecran" name="ecran">
+                                </div>
                             </div>
                         </div>
 
                         <!-- Section Imprimante -->
                         <div id="imprimanteSection" class="form-section">
                             <h6>Spécifications de l'imprimante</h6>
-                            <div class="mb-3">
-                                <label for="resolution" class="form-label">Résolution</label>
-                                <input type="text" class="form-control" id="resolution" name="resolution">
-                            </div>
-                            <div class="mb-3">
-                                <label for="vitesseimpression" class="form-label">Vitesse d'impression</label>
-                                <input type="text" class="form-control" id="vitesseimpression" name="vitesseimpression">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="resolution" class="form-label">Résolution</label>
+                                    <input type="text" class="form-control" id="resolution" name="resolution">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="vitesseimpression" class="form-label">Vitesse d'impression</label>
+                                    <input type="text" class="form-control" id="vitesseimpression" name="vitesseimpression">
+                                </div>
                             </div>
                         </div>
                     </form>
@@ -231,58 +263,224 @@
         </div>
     </div>
 
+    <!-- JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
     <script>
+        // Initialisation DataTable
+        $(document).ready(function() {
+            $('#ressourcesTable').DataTable({
+                language: {
+                    url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/fr-FR.json'
+                }
+            });
+        });
+
+        // Fonctions principales
         function showDetails(button) {
             const id = button.getAttribute('data-id');
             fetch(`/responsable/livraisons/ressources/${id}`)
-                .then(response => response.json())
-                .then(ressource => {
-                    const modal = new bootstrap.Modal(document.getElementById('detailsModal'));
-                    const detailsContent = document.getElementById('detailsContent');
-                    
-                    let content = `
-                        <ul class="details-list">
-                            <li><strong>Nom:</strong> ${ressource.nom}</li>
-                            <li><strong>Marque:</strong> ${ressource.marque}</li>
-                            <li><strong>Type:</strong> ${ressource.type}</li>
-                            <li><strong>État d'affectation:</strong> ${ressource.etataffectation ? 'Affecté' : 'Disponible'}</li>
-                            <li><strong>État de panne:</strong> ${ressource.etatpanne ? 'En panne' : 'Fonctionnel'}</li>
-                    `;
-
-                    if (ressource.type === 'ordinateur') {
-                        content += `
-                            <li><strong>CPU:</strong> ${ressource.cpu}</li>
-                            <li><strong>RAM:</strong> ${ressource.ram}</li>
-                            <li><strong>Disque dur:</strong> ${ressource.disquedur}</li>
-                            <li><strong>Écran:</strong> ${ressource.ecran}</li>
-                        `;
-                    } else if (ressource.type === 'imprimante') {
-                        content += `
-                            <li><strong>Résolution:</strong> ${ressource.resolution}</li>
-                            <li><strong>Vitesse d'impression:</strong> ${ressource.vitesseimpression}</li>
-                        `;
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Erreur lors de la récupération des détails');
                     }
+                    return response.text();
+                })
+                .then(text => {
+                    let ressource;
+                    try {
+                        // Essayer de nettoyer la réponse si nécessaire
+                        text = text.trim();
+                        // Si la réponse commence par un HTML, on extrait le JSON
+                        if (text.startsWith('<!DOCTYPE') || text.startsWith('<html')) {
+                            const match = text.match(/\{.*\}/s);
+                            if (match) {
+                                text = match[0];
+                            }
+                        }
+                        
+                        console.log('Réponse brute:', text); // Pour le débogage
+                        ressource = JSON.parse(text);
+                        
+                        // Vérifier si l'objet ressource est valide
+                        if (!ressource || typeof ressource !== 'object') {
+                            throw new Error('Format de données invalide');
+                        }
 
-                    content += '</ul>';
-                    detailsContent.innerHTML = content;
-                    modal.show();
+                        const detailsContent = document.getElementById('detailsContent');
+                        
+                        // Construction du contenu HTML avec style amélioré
+                        let content = `
+                            <style>
+                                .details-container {
+                                    padding: 20px;
+                                }
+                                .details-section {
+                                    background-color: #f8f9fa;
+                                    border-radius: 8px;
+                                    padding: 20px;
+                                    margin-bottom: 20px;
+                                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                                }
+                                .details-section:last-child {
+                                    margin-bottom: 0;
+                                }
+                                .details-section h6 {
+                                    color: #2c3e50;
+                                    font-weight: 600;
+                                    margin-bottom: 15px;
+                                    padding-bottom: 10px;
+                                    border-bottom: 2px solid #e9ecef;
+                                }
+                                .details-list {
+                                    list-style: none;
+                                    padding: 0;
+                                    margin: 0;
+                                }
+                                .details-list li {
+                                    display: flex;
+                                    align-items: center;
+                                    margin-bottom: 10px;
+                                    padding: 8px;
+                                    background-color: white;
+                                    border-radius: 4px;
+                                }
+                                .details-list li:last-child {
+                                    margin-bottom: 0;
+                                }
+                                .details-list strong {
+                                    min-width: 180px;
+                                    color: #495057;
+                                    font-weight: 500;
+                                }
+                                .badge {
+                                    padding: 6px 12px;
+                                    font-weight: 500;
+                                    border-radius: 4px;
+                                }
+                                .badge.bg-success {
+                                    background-color: #28a745 !important;
+                                }
+                                .badge.bg-danger {
+                                    background-color: #dc3545 !important;
+                                }
+                                .badge.bg-warning {
+                                    background-color: #ffc107 !important;
+                                    color: #000 !important;
+                                }
+                                .specs-icon {
+                                    margin-right: 10px;
+                                    width: 20px;
+                                    text-align: center;
+                                    color: #6c757d;
+                                }
+                            </style>
+                            <div class="details-container">
+                                <div class="details-section">
+                                    <h6><i class="fas fa-info-circle me-2"></i>Informations générales</h6>
+                                    <ul class="details-list">
+                                        <li><strong>ID:</strong> ${ressource.id || 'Non spécifié'}</li>
+                                        <li><strong>Nom:</strong> ${ressource.nom || 'Non spécifié'}</li>
+                                        <li><strong>Marque:</strong> ${ressource.marque || 'Non spécifié'}</li>
+                                        <li><strong>Type:</strong> ${ressource.type || 'Non spécifié'}</li>
+                                    </ul>
+                                </div>
+
+                                <div class="details-section">
+                                    <h6><i class="fas fa-check-circle me-2"></i>État</h6>
+                                    <ul class="details-list">
+                                        <li>
+                                            <strong>Statut d'affectation:</strong> 
+                                            <span class="badge ${ressource.etataffectation ? 'bg-danger' : 'bg-success'}">
+                                                ${ressource.etataffectation ? 'Affecté' : 'Disponible'}
+                                            </span>
+                                        </li>
+                                        <li>
+                                            <strong>État de fonctionnement:</strong> 
+                                            <span class="badge ${ressource.etatpanne ? 'bg-warning' : 'bg-success'}">
+                                                ${ressource.etatpanne ? 'En panne' : 'Fonctionnel'}
+                                            </span>
+                                        </li>
+                                    </ul>
+                                </div>
+
+                                <div class="details-section">
+                                    <h6><i class="fas fa-users me-2"></i>Affectation</h6>
+                                    <ul class="details-list">
+                                        <li><strong>Département:</strong> ${ressource.departement?.nom || 'Non affecté'}</li>
+                                        <li><strong>Enseignant:</strong> ${ressource.enseignant?.username || 'Non affecté'}</li>
+                                    </ul>
+                                </div>`;
+
+                        // Spécifications techniques selon le type
+                        if (ressource.type?.toLowerCase() === 'ordinateur') {
+                            content += `
+                                <div class="details-section">
+                                    <h6><i class="fas fa-laptop me-2"></i>Spécifications de l'ordinateur</h6>
+                                    <ul class="details-list">
+                                        <li>
+                                            <strong><i class="fas fa-microchip specs-icon"></i>Processeur:</strong>
+                                            ${ressource.cpu || 'Non spécifié'}
+                                        </li>
+                                        <li>
+                                            <strong><i class="fas fa-memory specs-icon"></i>Mémoire RAM:</strong>
+                                            ${ressource.ram || 'Non spécifié'}
+                                        </li>
+                                        <li>
+                                            <strong><i class="fas fa-hdd specs-icon"></i>Disque dur:</strong>
+                                            ${ressource.disquedur || 'Non spécifié'}
+                                        </li>
+                                        <li>
+                                            <strong><i class="fas fa-desktop specs-icon"></i>Écran:</strong>
+                                            ${ressource.ecran || 'Non spécifié'}
+                                        </li>
+                                    </ul>
+                                </div>`;
+                        } else if (ressource.type?.toLowerCase() === 'imprimante') {
+                            content += `
+                                <div class="details-section">
+                                    <h6><i class="fas fa-print me-2"></i>Spécifications de l'imprimante</h6>
+                                    <ul class="details-list">
+                                        <li>
+                                            <strong><i class="fas fa-expand specs-icon"></i>Résolution:</strong>
+                                            ${ressource.resolution || 'Non spécifié'}
+                                        </li>
+                                        <li>
+                                            <strong><i class="fas fa-tachometer-alt specs-icon"></i>Vitesse d'impression:</strong>
+                                            ${ressource.vitesseimpression || 'Non spécifié'}
+                                        </li>
+                                    </ul>
+                                </div>`;
+                        }
+
+                        content += '</div>';
+
+                        detailsContent.innerHTML = content;
+                        new bootstrap.Modal(document.getElementById('detailsModal')).show();
+                    } catch (e) {
+                        console.error('Erreur lors du parsing:', e);
+                        console.log('Réponse brute:', text);
+                        console.log('Tentative de parsing sur:', text);
+                        throw new Error(`Erreur lors du traitement des données: ${e.message}`);
+                    }
                 })
                 .catch(error => {
-                    console.error('Erreur:', error);
-                    alert('Une erreur est survenue lors de la récupération des détails');
+                    console.error('Erreur complète:', error);
+                    alert('Une erreur est survenue lors de la récupération des détails: ' + error.message);
                 });
         }
 
         function toggleFormSections() {
             const type = document.getElementById('type').value;
-            document.getElementById('ordinateurSection').classList.remove('active');
-            document.getElementById('imprimanteSection').classList.remove('active');
             
-            if (type === 'ordinateur') {
-                document.getElementById('ordinateurSection').classList.add('active');
-            } else if (type === 'imprimante') {
-                document.getElementById('imprimanteSection').classList.add('active');
+            document.querySelectorAll('.form-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            if (type) {
+                document.getElementById(`${type}Section`).classList.add('active');
             }
         }
 
@@ -292,6 +490,7 @@
             const formData = new FormData(form);
             
             let ressource = {
+                id: parseInt(formData.get('id')),
                 nom: formData.get('nom'),
                 marque: formData.get('marque'),
                 type: type,
@@ -299,6 +498,19 @@
                 etatpanne: false
             };
 
+            // Ajouter département si sélectionné
+            const departementId = formData.get('departement');
+            if (departementId) {
+                ressource.departement = { id: parseInt(departementId) };
+            }
+
+            // Ajouter enseignant si sélectionné
+            const enseignantId = formData.get('enseignant');
+            if (enseignantId) {
+                ressource.enseignant = { id: parseInt(enseignantId) };
+            }
+
+            // Ajouter les spécifications selon le type
             if (type === 'ordinateur') {
                 ressource.cpu = formData.get('cpu');
                 ressource.ram = formData.get('ram');
@@ -309,6 +521,7 @@
                 ressource.vitesseimpression = formData.get('vitesseimpression');
             }
 
+            // Envoyer la requête
             fetch('/responsable/livraisons/ressources', {
                 method: 'POST',
                 headers: {
@@ -316,15 +529,105 @@
                 },
                 body: JSON.stringify(ressource)
             })
-            .then(response => response.json())
-            .then(data => {
-                bootstrap.Modal.getInstance(document.getElementById('addRessourceModal')).hide();
-                location.reload();
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Erreur lors de l\'ajout');
+                }
+                // La ressource a été ajoutée avec succès
+                alert('Ressource ajoutée avec succès');
+                window.location.reload();
             })
             .catch(error => {
                 console.error('Erreur:', error);
                 alert('Une erreur est survenue lors de l\'ajout de la ressource');
             });
+        }
+
+        function deleteRessource(button) {
+            if (!confirm("Êtes-vous sûr de vouloir supprimer cette ressource ?")) return;
+            
+            const id = button.getAttribute('data-id');
+            
+            fetch(`/responsable/livraisons/ressources/${id}`, {
+                method: 'DELETE',
+            })
+            .then(response => {
+                if (response.ok) {
+                    alert('Ressource supprimée avec succès');
+                    location.reload();
+                } else {
+                    throw new Error('Erreur lors de la suppression');
+                }
+            })
+            .catch(handleError('Erreur lors de la suppression'));
+        }
+
+        function loadEnseignants(departementId) {
+            const enseignantSelect = document.getElementById('enseignant');
+            enseignantSelect.innerHTML = '<option value="">Sélectionnez un enseignant</option>';
+            
+            if (departementId) {
+                fetch(`/responsable/livraisons/ressources/enseignants/${departementId}`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Erreur réseau');
+                        }
+                        return response.text();
+                    })
+                    .then(text => {
+                        try {
+                            // Utiliser une expression régulière pour extraire les informations
+                            const enseignants = [];
+                            const regex = /"id":(\d+),"username":"([^"]+)"/g;
+                            let match;
+                            
+                            while ((match = regex.exec(text)) !== null) {
+                                const id = match[1];
+                                if (!enseignants.some(e => e.id === id)) {
+                                    enseignants.push({
+                                        id: id,
+                                        username: match[2]
+                                    });
+                                }
+                            }
+
+                            return enseignants;
+                        } catch (e) {
+                            console.error('Erreur lors du traitement des données:', e);
+                            console.log('Réponse brute:', text);
+                            throw new Error('Erreur lors du traitement des données');
+                        }
+                    })
+                    .then(enseignants => {
+                        enseignants.forEach(enseignant => {
+                            const option = document.createElement('option');
+                            option.value = enseignant.id;
+                            option.textContent = enseignant.username;
+                            enseignantSelect.appendChild(option);
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Erreur lors du chargement des enseignants:', error);
+                        alert('Impossible de charger les enseignants pour ce département: ' + error.message);
+                    });
+            }
+        }
+
+        // Helpers
+        function handleResponse(response) {
+            if (!response.ok) {
+                return response.text().then(text => {
+                    throw new Error(text || 'Erreur serveur');
+                });
+            }
+            return response.json();
+        }
+
+        function handleError(message) {
+            return error => {
+                console.error('Erreur:', error);
+                alert(`${message}: ${error.message}`);
+            };
         }
     </script>
 </body>

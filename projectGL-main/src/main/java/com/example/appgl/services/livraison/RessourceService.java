@@ -16,33 +16,47 @@ import com.example.appgl.repositories.livraison.RessourceRepository;
 @Service
 public class RessourceService {
 
-
     @Autowired
     private OrdinateurRepository ordinateurRepository;
 
     @Autowired
     private ImprimanteRepository imprimanteRepository;
+
     @Autowired
     private RessourceRepository ressourceRepository;
 
     public List<ressource> getAllRessources() {
         return ressourceRepository.findAll(); 
     }
-    // public ressource saveRessource(ressource r) {
-    //     return ressourceRepository.save(r);
-    // }
- // Sauvegarder une ressource (ordinateur ou imprimante)
- public ressource saveRessource(ressource r) {
-    if (r instanceof ordinateur) {
-        // Si la ressource est un ordinateur, on l'enregistre dans OrdinateurRepository
-        return ordinateurRepository.save((ordinateur) r);
-    } else if (r instanceof imprimante) {
-        // Si la ressource est une imprimante, on l'enregistre dans ImprimanteRepository
-        return imprimanteRepository.save((imprimante) r);
-    } else {
-        // Si la ressource est d'un type inconnu
-        throw new IllegalArgumentException("Type de ressource inconnu");
+
+    public boolean deleteRessource(Integer id) {
+        if (ressourceRepository.existsById(id)) {
+            ressourceRepository.deleteById(id);
+            return true;
+        } else {
+            return false;
+        }
     }
+
+    public ressource saveRessource(ressource r) {
+        try {
+            System.out.println("Tentative de sauvegarde dans le service: " + r);
+            if (r instanceof ordinateur) {
+                ordinateur ord = (ordinateur) r;
+                System.out.println("Sauvegarde d'un ordinateur: " + ord);
+                return ordinateurRepository.save(ord);
+            } else if (r instanceof imprimante) {
+                imprimante imp = (imprimante) r;
+                System.out.println("Sauvegarde d'une imprimante: " + imp);
+                return imprimanteRepository.save(imp);
+            } else {
+                System.out.println("Sauvegarde d'une ressource de base: " + r);
+                return ressourceRepository.save(r);
+            }
+        } catch (Exception e) {
+            System.err.println("Erreur dans le service lors de la sauvegarde: " + e.getMessage());
+            e.printStackTrace();
+            throw e;
+        }
     }
 }
-

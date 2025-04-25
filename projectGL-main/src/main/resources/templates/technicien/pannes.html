@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Mes Pannes à Traiter</title>
+    
+    <!-- CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    
+    <style>
+        .table-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .table thead th {
+            background-color: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+        }
+        
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8em;
+        }
+        
+        .status-panne { background-color: #dc3545; color: white; }
+        .status-severe { background-color: #ffc107; color: black; }
+        
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .btn-details { background-color: #17a2b8; color: white; }
+        .btn-reparer { background-color: #28a745; color: white; }
+        .btn-severe { background-color: #ffc107; color: black; }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>Mes Pannes à Traiter</h1>
+            <a href="/technicien/dashboard" class="btn btn-primary">
+                <i class="fas fa-arrow-left me-2"></i>Retour au tableau de bord
+            </a>
+        </div>
+
+        <!-- Tableau principal -->
+        <div class="table-container">
+            <table id="pannesTable" class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Ressource</th>
+                        <th>Type</th>
+                        <th>Marque</th>
+                        <th>Département</th>
+                        <th>État</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="panne : ${pannes}">
+                        <td th:text="${panne.id}">ID</td>
+                        <td th:text="${panne.ressource.nom}">Ressource</td>
+                        <td th:text="${panne.ressource.type}">Type</td>
+                        <td th:text="${panne.ressource.marque}">Marque</td>
+                        <td th:text="${panne.ressource.departement?.nom}">Département</td>
+                        <td>
+                            <span class="badge status-badge" 
+                                  th:classappend="${panne.type == 'severe' ? 'status-severe' : 'status-panne'}"
+                                  th:text="${panne.type == 'severe' ? 'Sévère' : 'En cours'}">
+                                État
+                            </span>
+                        </td>
+                        <td class="action-buttons">
+                            <button class="btn btn-sm btn-details" th:data-id="${panne.id}" onclick="showDetails(this)">
+                                <i class="fas fa-info-circle"></i>
+                            </button>
+                            <button class="btn btn-sm btn-reparer" th:data-id="${panne.id}" onclick="marquerReparee(this)">
+                                <i class="fas fa-check"></i> Réparée
+                            </button>
+                            <button class="btn btn-sm btn-severe" th:data-id="${panne.id}" onclick="marquerSevere(this)">
+                                <i class="fas fa-exclamation-triangle"></i> Sévère
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal Détails -->
+    <div class="modal fade" id="detailsModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Détails de la panne</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="detailsContent">
+                    <!-- Contenu dynamique -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        $(document).ready(function() {
+            $('#pannesTable').DataTable({
+                language: {
+                    url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/fr-FR.json'
+                }
+            });
+        });
+
+        function showDetails(button) {
+            const id = $(button).data('id');
+            
+            $.ajax({
+                url: `/technicien/pannes/${id}`,
+                method: 'GET',
+                success: function(panne) {
+                    const detailsContent = $('#detailsContent');
+                    let content = `
+                        <div class="details-container">
+                            <div class="details-section">
+                                <h6>Informations de la ressource</h6>
+                                <ul class="details-list">
+                                    <li><strong>Nom:</strong> ${panne.ressource.nom}</li>
+                                    <li><strong>Type:</strong> ${panne.ressource.type}</li>
+                                    <li><strong>Marque:</strong> ${panne.ressource.marque}</li>
+                                    <li><strong>Département:</strong> ${panne.ressource.departement?.nom || 'Non affecté'}</li>
+                                </ul>
+                            </div>
+                            <div class="details-section">
+                                <h6>État de la panne</h6>
+                                <ul class="details-list">
+                                    <li>
+                                        <strong>Type:</strong> 
+                                        <span class="badge ${panne.type === 'severe' ? 'bg-warning' : 'bg-danger'}">
+                                            ${panne.type === 'severe' ? 'Sévère' : 'Standard'}
+                                        </span>
+                                    </li>
+                                    <li><strong>Rapport:</strong> ${panne.rapport || 'Non spécifié'}</li>
+                                </ul>
+                            </div>`;
+
+                    if (panne.ressource.type === 'ordinateur') {
+                        content += `
+                            <div class="details-section">
+                                <h6>Spécifications techniques</h6>
+                                <ul class="details-list">
+                                    <li><strong>CPU:</strong> ${panne.ressource.cpu || 'Non spécifié'}</li>
+                                    <li><strong>RAM:</strong> ${panne.ressource.ram || 'Non spécifié'}</li>
+                                    <li><strong>Disque dur:</strong> ${panne.ressource.disquedur || 'Non spécifié'}</li>
+                                    <li><strong>Écran:</strong> ${panne.ressource.ecran || 'Non spécifié'}</li>
+                                </ul>
+                            </div>`;
+                    } else if (panne.ressource.type === 'imprimante') {
+                        content += `
+                            <div class="details-section">
+                                <h6>Spécifications techniques</h6>
+                                <ul class="details-list">
+                                    <li><strong>Résolution:</strong> ${panne.ressource.resolution || 'Non spécifié'}</li>
+                                    <li><strong>Vitesse d'impression:</strong> ${panne.ressource.vitesseimpression || 'Non spécifié'}</li>
+                                </ul>
+                            </div>`;
+                    }
+
+                    content += '</div>';
+                    detailsContent.html(content);
+                    new bootstrap.Modal($('#detailsModal')).show();
+                },
+                error: function(xhr, status, error) {
+                    console.error('Erreur:', error);
+                    alert('Une erreur est survenue lors de la récupération des détails');
+                }
+            });
+        }
+
+        function marquerReparee(button) {
+            const id = $(button).data('id');
+            
+            if (confirm("Confirmez-vous que cette panne a été réparée ?")) {
+                $.ajax({
+                    url: `/technicien/pannes/${id}/reparer`,
+                    method: 'POST',
+                    success: function() {
+                        alert('La panne a été marquée comme réparée');
+                        location.reload();
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Erreur:', error);
+                        alert('Une erreur est survenue lors de la mise à jour');
+                    }
+                });
+            }
+        }
+
+        function marquerSevere(button) {
+            const id = $(button).data('id');
+            
+            if (confirm("Confirmez-vous que cette panne est sévère ?")) {
+                $.ajax({
+                    url: `/technicien/pannes/${id}/severe`,
+                    method: 'POST',
+                    success: function() {
+                        alert('La panne a été marquée comme sévère');
+                        location.reload();
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Erreur:', error);
+                        alert('Une erreur est survenue lors de la mise à jour');
+                    }
+                });
+            }
+        }
+    </script>
+</body>
+</html> 

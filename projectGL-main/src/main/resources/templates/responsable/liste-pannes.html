@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Liste des Pannes</title>
+    
+    <!-- CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    
+    <style>
+        /* Styles optimisés */
+        .table-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .table thead th {
+            background-color: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+        }
+        
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8em;
+        }
+        
+        .status-panne { background-color: #dc3545; color: white; }
+        
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .btn-details { background-color: #17a2b8; color: white; }
+        .btn-reparer { background-color: #28a745; color: white; }
+        
+        .details-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .details-list li {
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+        
+        .details-list li strong {
+            display: inline-block;
+            width: 150px;
+        }
+        
+        /* Style pour la recherche */
+        .search-container {
+            margin-bottom: 15px;
+        }
+        
+        /* Style responsive */
+        @media (max-width: 768px) {
+            .action-buttons {
+                flex-direction: column;
+                gap: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>Liste des Pannes</h1>
+            <a href="/responsable/livraisons/ressources" class="btn btn-primary">
+                <i class="fas fa-list me-2"></i>Liste des Ressources
+            </a>
+        </div>
+
+        <!-- Tableau principal -->
+        <div class="table-container">
+            <div class="search-container">
+                <input type="text" id="searchInput" class="form-control" placeholder="Rechercher une panne...">
+            </div>
+            
+            <table id="pannesTable" class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nom</th>
+                        <th>Type</th>
+                        <th>Marque</th>
+                        <th>Département</th>
+                        <th>Enseignant</th>
+                        <th>État</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="ressource : ${ressources}" th:if="${ressource.etatpanne}">
+                        <td th:text="${ressource.id}">ID</td>
+                        <td th:text="${ressource.nom}">Nom</td>
+                        <td th:text="${ressource.type}">Type</td>
+                        <td th:text="${ressource.marque}">Marque</td>
+                        <td th:text="${ressource.departement?.nom}">Département</td>
+                        <td th:text="${ressource.enseignant != null ? ressource.enseignant.username : 'Non affecté'}">Enseignant</td>
+                        <td>
+                            <span class="badge status-badge status-panne">
+                                En panne
+                            </span>
+                        </td>
+                        <td class="action-buttons">
+                            <button class="btn btn-sm btn-details" th:data-id="${ressource.id}" onclick="showDetails(this)">
+                                <i class="fas fa-info-circle"></i>
+                            </button>
+                            <button class="btn btn-sm btn-primary" th:data-id="${ressource.id}" onclick="affecterTechnicien(this)">
+                                <i class="fas fa-user-cog"></i> Affecter au technicien
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal Détails -->
+    <div class="modal fade" id="detailsModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Détails de la ressource</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="detailsContent">
+                    <!-- Contenu dynamique -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Affecter Technicien -->
+    <div class="modal fade" id="affecterTechnicienModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Affecter un technicien</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="affecterTechnicienForm">
+                        <input type="hidden" id="ressourceId" name="ressourceId">
+                        <div class="mb-3">
+                            <label for="technicienId" class="form-label">Sélectionner un technicien</label>
+                            <select class="form-select" id="technicienId" name="technicienId" required>
+                                <option value="">Choisir un technicien...</option>
+                                <option th:each="tech : ${techniciens}" th:value="${tech.id}" th:text="${tech.username}">Technicien</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="button" class="btn btn-primary" onclick="submitAffectation()">Affecter</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Initialisation DataTable
+        $(document).ready(function() {
+            $('#pannesTable').DataTable({
+                language: {
+                    url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/fr-FR.json'
+                },
+                dom: '<"top"f>rt<"bottom"lip><"clear">',
+                initComplete: function() {
+                    // Intégration de la recherche personnalisée avec DataTables
+                    $('#searchInput').on('keyup', function() {
+                        $('#pannesTable').DataTable().search(this.value).draw();
+                    });
+                }
+            });
+        });
+
+        // Fonction pour afficher les détails
+        function showDetails(button) {
+            const id = $(button).data('id');
+            
+            $.ajax({
+                url: `/responsable/livraisons/ressources/${id}`,
+                method: 'GET',
+                success: function(ressource) {
+                    const detailsContent = $('#detailsContent');
+                    
+                    // Construction du contenu HTML avec style amélioré
+                    let content = `
+                        <style>
+                            .details-container {
+                                padding: 15px;
+                            }
+                            .details-section {
+                                background-color: #f8f9fa;
+                                border-radius: 8px;
+                                padding: 20px;
+                                margin-bottom: 20px;
+                            }
+                            .details-section h6 {
+                                color: #2c3e50;
+                                font-weight: 600;
+                                margin-bottom: 15px;
+                                padding-bottom: 10px;
+                                border-bottom: 1px solid #dee2e6;
+                            }
+                            .details-list {
+                                list-style: none;
+                                padding: 0;
+                                margin: 0;
+                            }
+                            .details-list li {
+                                display: flex;
+                                margin-bottom: 10px;
+                                padding: 8px 12px;
+                                background-color: white;
+                                border-radius: 4px;
+                                align-items: center;
+                            }
+                            .details-list li:last-child {
+                                margin-bottom: 0;
+                            }
+                            .details-list strong {
+                                min-width: 180px;
+                                color: #495057;
+                                font-weight: 500;
+                            }
+                            .badge-panne {
+                                background-color: #dc3545;
+                                color: white;
+                                padding: 6px 12px;
+                                border-radius: 4px;
+                                font-weight: 500;
+                            }
+                        </style>
+                        <div class="details-container">
+                            <div class="details-section">
+                                <h6>Informations générales</h6>
+                                <ul class="details-list">
+                                    <li><strong>ID:</strong> ${ressource.id || 'Non spécifié'}</li>
+                                    <li><strong>Nom:</strong> ${ressource.nom || 'Non spécifié'}</li>
+                                    <li><strong>Marque:</strong> ${ressource.marque || 'Non spécifié'}</li>
+                                    <li><strong>Type:</strong> ${ressource.type || 'Non spécifié'}</li>
+                                </ul>
+                            </div>
+
+                            <div class="details-section">
+                                <h6>État</h6>
+                                <ul class="details-list">
+                                    <li>
+                                        <strong>Statut de panne:</strong> 
+                                        <span class="badge-panne">En panne</span>
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <div class="details-section">
+                                <h6>Affectation</h6>
+                                <ul class="details-list">
+                                    <li><strong>Département:</strong> ${ressource.departement?.nom || 'Non affecté'}</li>
+                                    <li><strong>Enseignant:</strong> ${ressource.enseignant?.username || 'Non affecté'}</li>
+                                </ul>
+                            </div>`;
+
+                    // Ajout des spécifications techniques selon le type
+                    if (ressource.type === 'ordinateur') {
+                        content += `
+                            <div class="details-section">
+                                <h6>Spécifications techniques</h6>
+                                <ul class="details-list">
+                                    <li><strong>CPU:</strong> ${ressource.cpu || 'Non spécifié'}</li>
+                                    <li><strong>RAM:</strong> ${ressource.ram || 'Non spécifié'}</li>
+                                    <li><strong>Disque dur:</strong> ${ressource.disquedur || 'Non spécifié'}</li>
+                                    <li><strong>Écran:</strong> ${ressource.ecran || 'Non spécifié'}</li>
+                                </ul>
+                            </div>`;
+                    } else if (ressource.type === 'imprimante') {
+                        content += `
+                            <div class="details-section">
+                                <h6>Spécifications techniques</h6>
+                                <ul class="details-list">
+                                    <li><strong>Résolution:</strong> ${ressource.resolution || 'Non spécifié'}</li>
+                                    <li><strong>Vitesse d'impression:</strong> ${ressource.vitesseimpression || 'Non spécifié'}</li>
+                                </ul>
+                            </div>`;
+                    }
+
+                    content += '</div>';
+
+                    detailsContent.html(content);
+                    new bootstrap.Modal($('#detailsModal')).show();
+                },
+                error: function(xhr, status, error) {
+                    console.error('Erreur:', error);
+                    alert('Une erreur est survenue lors de la récupération des détails');
+                }
+            });
+        }
+
+        // Fonction pour ouvrir le modal d'affectation
+        function affecterTechnicien(button) {
+            const id = $(button).data('id');
+            $('#ressourceId').val(id);
+            new bootstrap.Modal($('#affecterTechnicienModal')).show();
+        }
+
+        // Fonction pour soumettre l'affectation
+        function submitAffectation() {
+            const ressourceId = $('#ressourceId').val();
+            const technicienId = $('#technicienId').val();
+
+            if (!technicienId) {
+                alert('Veuillez sélectionner un technicien');
+                return;
+            }
+
+            $.ajax({
+                url: `/responsable/livraisons/ressources/${ressourceId}/affecter-technicien`,
+                method: 'POST',
+                data: JSON.stringify({ technicienId: technicienId }),
+                contentType: 'application/json',
+                success: function() {
+                    alert('Technicien affecté avec succès');
+                    location.reload();
+                },
+                error: function(xhr, status, error) {
+                    console.error('Erreur:', error);
+                    alert('Une erreur est survenue lors de l\'affectation du technicien');
+                }
+            });
+        }
+    </script>
+</body>
+</html>

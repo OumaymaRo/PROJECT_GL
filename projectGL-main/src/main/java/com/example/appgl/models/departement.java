@@ -30,6 +30,10 @@ public class departement {
 	@OneToMany(mappedBy = "departement")
     private List<enseignant> enseignants; 
 
+	@OneToMany(mappedBy = "departement")
+    private List<ressource> ressources; 
+
+
 
 	
 	public departement() {
@@ -72,6 +76,9 @@ public class departement {
 
 	public List<enseignant> getEnseignants() {
 		return enseignants;
+	}
+	public List<ressource> getRessources() {
+		return ressources;
 	}
 
 	public void setEnseignants(List<enseignant> enseignants) {
