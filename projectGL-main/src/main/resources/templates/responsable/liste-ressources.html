@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Liste des Ressources</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .table-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-top: 20px;
+        }
+        .table thead th {
+            background-color: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+        }
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8em;
+        }
+        .status-available {
+            background-color: #28a745;
+            color: white;
+        }
+        .status-unavailable {
+            background-color: #dc3545;
+            color: white;
+        }
+        .status-panne {
+            background-color: #ffc107;
+            color: black;
+        }
+        .action-buttons .btn {
+            margin-right: 5px;
+        }
+        .btn-details {
+            background-color: #17a2b8;
+            color: white;
+        }
+        .btn-edit {
+            background-color: #ffc107;
+            color: black;
+        }
+        .btn-delete {
+            background-color: #dc3545;
+            color: white;
+        }
+        .details-list {
+            list-style: none;
+            padding: 0;
+        }
+        .details-list li {
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+        .details-list li strong {
+            display: inline-block;
+            width: 150px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>Liste des Ressources</h1>
+            <button class="btn btn-primary">
+                <i class="fas fa-plus"></i> Ajouter une ressource
+            </button>
+        </div>
+
+        <div class="table-container">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Nom</th>
+                        <th>Marque</th>
+                        <th>Type</th>
+                        <th>Statut</th>
+                        <th>Détails</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="ressource : ${ressources}">
+                        <td th:text="${ressource.nom}">Nom</td>
+                        <td th:text="${ressource.marque}">Marque</td>
+                        <td th:text="${ressource.type}">Type</td>
+                        <td>
+                            <span class="badge status-badge" 
+                                  th:classappend="${ressource.etataffectation} ? 'status-unavailable' : 'status-available'">
+                                <span th:text="${ressource.etataffectation} ? 'Affecté' : 'Disponible'">Statut</span>
+                            </span>
+                            <span class="badge status-badge status-panne" th:if="${ressource.etatpanne}">
+                                En panne
+                            </span>
+                        </td>
+                        <td>
+                            <div th:if="${ressource instanceof T(com.example.appgl.models.ordinateur)}">
+                                <small>
+                                    CPU: <span th:text="${ressource.cpu}"></span><br>
+                                    RAM: <span th:text="${ressource.ram}"></span>
+                                </small>
+                            </div>
+                            <div th:if="${ressource instanceof T(com.example.appgl.models.imprimante)}">
+                                <small>
+                                    Résolution: <span th:text="${ressource.resolution}"></span><br>
+                                    Vitesse: <span th:text="${ressource.vitesseimpression}"></span>
+                                </small>
+                            </div>
+                        </td>
+                        <td class="action-buttons">
+                            <button class="btn btn-sm btn-details" th:data-id="${ressource.id}" onclick="showDetails(this)">
+                                <i class="fas fa-info-circle"></i>
+                            </button>
+                            <button class="btn btn-sm btn-edit">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal pour afficher les détails -->
+    <div class="modal fade" id="detailsModal" tabindex="-1" aria-labelledby="detailsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="detailsModalLabel">Détails de la ressource</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="detailsContent">
+                    <!-- Le contenu sera rempli dynamiquement -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function showDetails(button) {
+            const id = button.getAttribute('data-id');
+            fetch(`/responsable/livraisons/ressources/${id}`)
+                .then(response => response.json())
+                .then(ressource => {
+                    const modal = new bootstrap.Modal(document.getElementById('detailsModal'));
+                    const detailsContent = document.getElementById('detailsContent');
+                    
+                    let content = `
+                        <ul class="details-list">
+                            <li><strong>Nom:</strong> ${ressource.nom}</li>
+                            <li><strong>Marque:</strong> ${ressource.marque}</li>
+                            <li><strong>Type:</strong> ${ressource.type}</li>
+                            <li><strong>État d'affectation:</strong> ${ressource.etataffectation ? 'Affecté' : 'Disponible'}</li>
+                            <li><strong>État de panne:</strong> ${ressource.etatpanne ? 'En panne' : 'Fonctionnel'}</li>
+                    `;
+
+                    if (ressource.type === 'ordinateur') {
+                        content += `
+                            <li><strong>CPU:</strong> ${ressource.cpu}</li>
+                            <li><strong>RAM:</strong> ${ressource.ram}</li>
+                            <li><strong>Disque dur:</strong> ${ressource.disquedur}</li>
+                            <li><strong>Écran:</strong> ${ressource.ecran}</li>
+                        `;
+                    } else if (ressource.type === 'imprimante') {
+                        content += `
+                            <li><strong>Résolution:</strong> ${ressource.resolution}</li>
+                            <li><strong>Vitesse d'impression:</strong> ${ressource.vitesseimpression}</li>
+                        `;
+                    }
+
+                    content += '</ul>';
+                    detailsContent.innerHTML = content;
+                    modal.show();
+                })
+                .catch(error => {
+                    console.error('Erreur:', error);
+                    alert('Une erreur est survenue lors de la récupération des détails');
+                });
+        }
+    </script>
+</body>
+</html>
