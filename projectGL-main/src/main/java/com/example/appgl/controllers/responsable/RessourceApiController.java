@@ -35,4 +35,10 @@ public class RessourceApiController {
     public ressource getRessourceDetails(@PathVariable Integer id) {
         return ressourceRepository.findById(id).orElse(null);
     }
+
+    @PostMapping("/ressources")
+    @ResponseBody
+    public ressource addRessource(@RequestBody ressource ressource) {
+        return ressourceService.saveRessource(ressource);
+    }
 } 
