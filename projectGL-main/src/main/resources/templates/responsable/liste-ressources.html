@@ -96,7 +96,7 @@
                         <th>ID</th>
                         <th>Nom</th>
                         <th>Marque</th>
-                        <th>Type</th>
+                        
                         <th>Statut</th>
                         <th>État panne</th>
                         <th>Département</th>
@@ -110,7 +110,7 @@
                         <td th:text="${ressource.id}">ID</td> 
                         <td th:text="${ressource.nom}">Nom</td>
                         <td th:text="${ressource.marque}">Marque</td>
-                        <td th:text="${ressource.type}">Type</td>
+                        
                         <td>
                             <span class="badge status-badge"
                                   th:classappend="${ressource.etataffectation ? 'status-unavailable' : 'status-available'}">
@@ -130,9 +130,7 @@
                             <button class="btn btn-sm btn-details" th:data-id="${ressource.id}" onclick="showDetails(this)">
                                 <i class="fas fa-info-circle"></i>
                             </button>
-                            <button class="btn btn-sm btn-edit">
-                                <i class="fas fa-edit"></i>
-                            </button>
+                            
                             <button class="btn btn-sm btn-delete" th:data-id="${ressource.id}" onclick="deleteRessource(this)">
                                 <i class="fas fa-trash"></i>
                             </button>

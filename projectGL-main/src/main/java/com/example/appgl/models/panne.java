@@ -1,6 +1,7 @@
 package com.example.appgl.models;
 
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 
 /**
  * Entité représentant une panne dans le système.
@@ -20,11 +21,17 @@ public class panne {
 	@Column(name = "estreparee")
 	private boolean estreparee;
 
-	@Column(name = "rapport")
+	@Column(name = "rapport", length = 4000)
 	private String rapport;
 
 	@Column(name = "type")
 	private String type;
+
+	@Column(name = "date_reclamation")
+	private LocalDateTime dateReclamation;
+
+	@Column(name = "date_reparation")
+	private LocalDateTime dateReparation;
 
 	@OneToOne(cascade = CascadeType.ALL)
 	@JoinColumn(name = "constatdepanneid", referencedColumnName = "id")
@@ -38,16 +45,16 @@ public class panne {
 	@JoinColumn(name = "ressourceid") 
 	private ressource ressource;
 
-
 	@ManyToOne
 	@JoinColumn(name = "technicienid") 
 	private technicien technicien;
 
+	@ManyToOne
+	@JoinColumn(name = "enseignantid")
+	private enseignant enseignant;
 
 	public panne() {
 	}
-
-
 
 	// Getters et Setters
 	public int getId() {
@@ -115,4 +122,27 @@ public class panne {
 		this.technicien = technicien;
 	}
 
+	public LocalDateTime getDateReclamation() {
+		return dateReclamation;
+	}
+
+	public void setDateReclamation(LocalDateTime dateReclamation) {
+		this.dateReclamation = dateReclamation;
+	}
+
+	public LocalDateTime getDateReparation() {
+		return dateReparation;
+	}
+
+	public void setDateReparation(LocalDateTime dateReparation) {
+		this.dateReparation = dateReparation;
+	}
+
+	public enseignant getEnseignant() {
+		return enseignant;
+	}
+
+	public void setEnseignant(enseignant enseignant) {
+		this.enseignant = enseignant;
+	}
 }

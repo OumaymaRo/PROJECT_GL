@@ -92,7 +92,7 @@
                     <tr>
                         <th>ID</th>
                         <th>Nom</th>
-                        <th>Type</th>
+                       
                         <th>Marque</th>
                         <th>Département</th>
                         <th>Enseignant</th>
@@ -104,7 +104,7 @@
                     <tr th:each="ressource : ${ressources}" th:if="${ressource.etatpanne}">
                         <td th:text="${ressource.id}">ID</td>
                         <td th:text="${ressource.nom}">Nom</td>
-                        <td th:text="${ressource.type}">Type</td>
+                        
                         <td th:text="${ressource.marque}">Marque</td>
                         <td th:text="${ressource.departement?.nom}">Département</td>
                         <td th:text="${ressource.enseignant != null ? ressource.enseignant.username : 'Non affecté'}">Enseignant</td>

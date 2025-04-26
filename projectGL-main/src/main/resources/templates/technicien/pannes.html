@@ -59,7 +59,7 @@
                     <tr>
                         <th>ID</th>
                         <th>Ressource</th>
-                        <th>Type</th>
+                       
                         <th>Marque</th>
                         <th>Département</th>
                         <th>État</th>
@@ -70,7 +70,7 @@
                     <tr th:each="panne : ${pannes}">
                         <td th:text="${panne.id}">ID</td>
                         <td th:text="${panne.ressource.nom}">Ressource</td>
-                        <td th:text="${panne.ressource.type}">Type</td>
+                        
                         <td th:text="${panne.ressource.marque}">Marque</td>
                         <td th:text="${panne.ressource.departement?.nom}">Département</td>
                         <td>
@@ -110,6 +110,59 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Rapport Réparation -->
+    <div class="modal fade" id="rapportModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Rapport de Réparation</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-4">
+                        <h6>Informations de la ressource</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Numéro de ressource:</strong> <span id="ressourceId"></span></p>
+                                <p><strong>Nom:</strong> <span id="ressourceNom"></span></p>
+                                <p><strong>Type:</strong> <span id="ressourceType"></span></p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Département:</strong> <span id="departementNom"></span></p>
+                                <p><strong>Enseignant:</strong> <span id="enseignantNom"></span></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <h6>Informations de la panne</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Date de réclamation:</strong> <span id="dateReclamation"></span></p>
+                                <p><strong>Technicien:</strong> <span id="technicienNom"></span></p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Date de réparation:</strong> <span id="dateReparation"></span></p>
+                            </div>
+                        </div>
+                    </div>
+                    <form id="rapportForm">
+                        <input type="hidden" id="panneId" name="panneId">
+                        <div class="mb-3">
+                            <label for="rapportReparation" class="form-label">Rapport de réparation</label>
+                            <textarea class="form-control" id="rapportReparation" name="rapportReparation" rows="5" required 
+                                    maxlength="3000" oninput="updateCharCount(this)"></textarea>
+                            <small class="text-muted">Caractères restants: <span id="charCount">3000</span></small>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="button" class="btn btn-primary" onclick="submitRapport()">Soumettre</button>
                 </div>
             </div>
         </div>
@@ -197,20 +250,82 @@
         function marquerReparee(button) {
             const id = $(button).data('id');
             
-            if (confirm("Confirmez-vous que cette panne a été réparée ?")) {
-                $.ajax({
-                    url: `/technicien/pannes/${id}/reparer`,
-                    method: 'POST',
-                    success: function() {
-                        alert('La panne a été marquée comme réparée');
-                        location.reload();
-                    },
-                    error: function(xhr, status, error) {
-                        console.error('Erreur:', error);
+            // Récupérer les détails de la panne
+            $.ajax({
+                url: `/technicien/pannes/${id}`,
+                method: 'GET',
+                success: function(data) {
+                    // Remplir les informations dans le modal
+                    $('#panneId').val(data.id);
+                    $('#ressourceId').text(data.ressource.id);
+                    $('#ressourceNom').text(data.ressource.nom);
+                    $('#ressourceType').text(data.ressource.type);
+                    $('#departementNom').text(data.ressource.departement ? data.ressource.departement.nom : 'Non affecté');
+                    $('#enseignantNom').text(data.enseignant ? data.enseignant.username : 'Non spécifié');
+                    $('#dateReclamation').text(new Date(data.dateReclamation).toLocaleString());
+                    $('#technicienNom').text(data.technicien ? data.technicien.username : 'Non affecté');
+                    $('#dateReparation').text(new Date().toLocaleString());
+                    
+                    // Afficher le modal
+                    new bootstrap.Modal($('#rapportModal')).show();
+                },
+                error: function(xhr, status, error) {
+                    console.error('Erreur:', error);
+                    alert('Une erreur est survenue lors de la récupération des détails');
+                }
+            });
+        }
+
+        function updateCharCount(textarea) {
+            const maxLength = 3000;
+            const remaining = maxLength - textarea.value.length;
+            document.getElementById('charCount').textContent = remaining;
+            
+            if (remaining < 0) {
+                textarea.value = textarea.value.substring(0, maxLength);
+                document.getElementById('charCount').textContent = 0;
+            }
+        }
+
+        function submitRapport() {
+            const panneId = $('#panneId').val();
+            const rapport = $('#rapportReparation').val();
+
+            if (!rapport) {
+                alert('Veuillez remplir le rapport de réparation');
+                return;
+            }
+
+            if (rapport.length > 3000) {
+                alert('Le rapport est trop long. Maximum 3000 caractères autorisés.');
+                return;
+            }
+
+            $.ajax({
+                url: `/technicien/pannes/${panneId}/reparer`,
+                method: 'POST',
+                data: JSON.stringify({ rapport: rapport }),
+                contentType: 'application/json',
+                success: function(response) {
+                    try {
+                        const result = JSON.parse(response);
+                        if (result.message) {
+                            alert(result.message);
+                            location.reload();
+                        } else if (result.error) {
+                            alert('Erreur: ' + result.error);
+                        }
+                    } catch (e) {
+                        console.error('Erreur lors du parsing de la réponse:', e);
                         alert('Une erreur est survenue lors de la mise à jour');
                     }
-                });
-            }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Erreur:', error);
+                    console.error('Réponse:', xhr.responseText);
+                    alert('Une erreur est survenue lors de la mise à jour');
+                }
+            });
         }
 
         function marquerSevere(button) {
